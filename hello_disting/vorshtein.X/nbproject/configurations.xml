@@ -5,7 +5,6 @@
                    displayName="Header Files"
                    projectFiles="true">
       <itemPath>../global.h</itemPath>
-      <itemPath>../include/leds.h</itemPath>
       <itemPath>../include/fixed.h</itemPath>
       <itemPath>../include/phaser.h</itemPath>
       <itemPath>../include/table.h</itemPath>

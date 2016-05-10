@@ -6,8 +6,6 @@
 #define DISTING_ADC_RESOLUTION (24)
 #define AP_LOOKUP_EXP (9)
 
-// Size of tangent function lookup table for the allpass filter
-// Size is 1024+4 bytes = 256+1 elements
 #define AP_LOOKUP_SIZE ((1 << AP_LOOKUP_EXP) + 1)
 
 static const fix32 __tan_table[AP_LOOKUP_SIZE] = {

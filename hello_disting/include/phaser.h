@@ -7,12 +7,6 @@
 #define PHASER_NUM_NOTCHES (7)
 #define PHASER_NUM_FILTERS (14)
 
-//  4,194,304
-
-//#define DISTING_ADC_MAX_HALF ((1 << (DISTING_ADC_RESOLUTION - 2)) - 1)
-
-//#define TWO_ADC_MAX (2 * DISTING_ADC_MAX_HALF)
-// 157..934
 #define POTMIN (157)
 #define POTMAX (934)
 
@@ -49,7 +43,7 @@ static inline void UpdateLookupIndices()
     register fix32 __pot = (pot + POTMAX) << 19;
     //pot <<= (31 - 10 - 2);
 
-    register fix32* p_coeff; // = __coeff;
+    register fix32* p_coeff;
     char i;
     for (i = 0, p_coeff = __coeff; i < PHASER_NUM_NOTCHES; ++i, ++p_coeff) {
         in = multfix32(in, __pot);
@@ -62,15 +56,10 @@ static fix32 ComputeLookupValue(const char coeff_index)
 #define __LOOKUP_SHIFT_OPERAND__ ((DISTING_ADC_RESOLUTION - AP_LOOKUP_EXP - 1))
     
     register const fix32 pos_index = *(__coeff + coeff_index);
-
-    //register const fix32 base_index = pos_index >> (DISTING_ADC_RESOLUTION - AP_LOOKUP_EXP - 1);
     register const fix32 base_index = pos_index >> __LOOKUP_SHIFT_OPERAND__;
-
-    // difference between pos_index and base_index shifted up to the original magnitude
-    //register const fix32 d = (pos_index - (base_index << (DISTING_ADC_RESOLUTION - AP_LOOKUP_EXP - 1))) << (31 - (DISTING_ADC_RESOLUTION - AP_LOOKUP_EXP + 0));
     register const fix32 d = (pos_index - (base_index << __LOOKUP_SHIFT_OPERAND__)) << (31 - (__LOOKUP_SHIFT_OPERAND__ + 1));
-
     register const fix32* base = __tan_table + base_index;
+    
     return multfix32(d, *(base + 1) - *base) + *base;
 }
 

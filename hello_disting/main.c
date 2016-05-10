@@ -124,8 +124,6 @@ static int ledseq[8][2] = {
     { 0, BIT_4}, // 4
 };
 
-// static int order[8] = {0, 1, 6, 7, 3, 2, 5, 4};
-
 void doBypass()
 {
     // setup
@@ -135,15 +133,8 @@ void doBypass()
         // wait for new audio frame
         IDLE();
 
-        // check highest bit (not sign bit)
-        //int x = inL & 0x40000000;
-        //int y = inR & 0x40000000;
-
-        // check 24th bit (sign bit)
-        int x = inL;// & 0b00000000100000000000000000000000;
-        int y = inR;// & 0b00000000100000000000000000000000;
-        
-        //float y = scale_alt(inR);
+        int x = inL;
+        int y = inR;
 
         // do the processing
 
@@ -175,8 +166,7 @@ void doAlgorithm0(fix32 feedback)
         // y = feedback * mix + x;
         fix32 y = multfix32(mix, feedback) + inR;
 
-        // index now in [0, 2^24 - 1]
-        UpdateLookupIndices(/*inL, pot*/);
+        UpdateLookupIndices();
 
         char j;
         for (j = 0; j < PHASER_NUM_NOTCHES; ++j) {
