@@ -11,14 +11,14 @@ https://hackaday.io/project/5290-pic32-fixed-floating-point-performance
 
 Usage:
 
-Z input controls the spread of filter notches. 
+Z input modifies the filter notch spectral distribution, variable between "very close" to roughly 1 notch/octave
 
-Ranges between a very small value (notches become very closely arranged) and a value corresponding roughly to 1 octave/notch.
-
-X input controls phaser sweep
+X input controls the filter breaking frequency
 
 Y input is audio source input
 
-A and B are mix output
+A and B output are currently both wet/dry signals mixed equally. 
+
+Planning to let B output be "inverted dry/wet".
 
 # vorshtein_disting
