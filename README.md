@@ -4,7 +4,7 @@ Based on theory from
 
 https://ccrma.stanford.edu/~jos/pasp/Classic_Virtual_Analog_Phase.html 
 
-implemented using ad-hoc fixed point arithmetic borrowed from 
+implemented using fixed point arithmetic borrowed from 
 
 https://hackaday.io/project/5290-pic32-fixed-floating-point-performance
 
