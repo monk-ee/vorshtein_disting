@@ -11,7 +11,7 @@ https://hackaday.io/project/5290-pic32-fixed-floating-point-performance
 
 Usage:
 
-Z input modifies the filter notch spectral distribution, variable between "very close" to roughly 1 notch/octave
+Z input modifies the filter notch spectral distribution, variable between "very closely together" and roughly 1 notch/octave
 
 X input controls the filter breaking frequency
 
