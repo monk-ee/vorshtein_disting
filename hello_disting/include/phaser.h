@@ -4,8 +4,8 @@
 #include "global.h"
 #include "table.h"
 
-#define PHASER_NUM_NOTCHES (7)
-#define PHASER_NUM_FILTERS (14)
+#define PHASER_NUM_NOTCHES (18)
+#define PHASER_NUM_FILTERS (36)
 
 #define POTMIN (157)
 #define POTMAX (934)
@@ -14,7 +14,6 @@
 #define PHASER_FEEDBACK_0000 (0)
 #define PHASER_FEEDBACK_1000 (1073741824)
 #define PHASER_FEEDBACK_2000 (2147483647)
-#define PHASER_FEEDBACK_4000 (2147483647)
 
 typedef struct
 {
@@ -31,7 +30,7 @@ static inline void UpdateLookupIndices()
 #define __DISTING_ADC_MAX_HALF__ (4194303)
 #define __DISTING_ADC_MAX__ (8388606)
 
-    register fix32 in = inL += __DISTING_ADC_MAX_HALF__;
+    register fix32 in = inL + __DISTING_ADC_MAX_HALF__;
     
     if (in > __DISTING_ADC_MAX__) {
         in = __DISTING_ADC_MAX__;
@@ -51,7 +50,7 @@ static inline void UpdateLookupIndices()
     }
 }
 
-static fix32 ComputeLookupValue(const char coeff_index)
+static inline fix32 ComputeLookupValue(const char coeff_index)
 {
 #define __LOOKUP_SHIFT_OPERAND__ ((DISTING_ADC_RESOLUTION - AP_LOOKUP_EXP - 1))
     

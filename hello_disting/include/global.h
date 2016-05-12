@@ -41,14 +41,14 @@ extern void delayLoop( int count );
 extern void ConfigureCodec();
 extern void ErrorHalt();
 
-#define SYS_FREQ 	(40000000L)
+#define SYS_FREQ 	(50000000L)
 
 //#define SAMPLE_RATE     78125
 #define SAMPLE_RATE     40000
 
 #define RODIV		2 //0
 #define REFTRIM		0
-#define SPI_SRC_DIV     4 //8
+#define SPI_SRC_DIV     8 //8
 
 extern volatile unsigned int time;
 extern volatile int inL, inR;
