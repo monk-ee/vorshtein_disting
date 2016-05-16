@@ -30,6 +30,7 @@ SOFTWARE.
 #include "global.h"
 
 #include "phaser.h"
+#include "bypass.h"
 
 // Configuration Bit settings
 // SYSCLK = 40 MHz (8MHz internal OSC / FPLLIDIV * FPLLMUL / FPLLODIV)
@@ -112,7 +113,6 @@ int readADC()
     return ret;
 }
 
-
 static int ledseq[8][2] = {
     { BIT_3, 0}, // 0
     { 0, BIT_15}, // 1
@@ -123,68 +123,6 @@ static int ledseq[8][2] = {
     { 0, BIT_12}, // 5
     { 0, BIT_4}, // 4
 };
-
-void doBypass()
-{
-    // setup
-    DECLARATIONS();
-
-    for (;;) {
-        // wait for new audio frame
-        IDLE();
-
-        int x = inL;
-        int y = inR;
-
-        // do the processing
-
-        // write the outputs
-        outL = x;
-        outR = y;
-
-        // loop end processing
-        // (including reading the ADC channels)
-        LOOP_END();
-
-    }
-}
-
-/*
- * The archetypal algorithm loop.
- */
-void doAlgorithm0(fix32 feedback)
-{
-    // setup
-    DECLARATIONS();
-
-    fix32 mix = 0;
-    
-    for (;;) {
-        // wait for new audio frame
-        IDLE();
-
-        // y = feedback * mix + x;
-        fix32 y = multfix32(mix, feedback) + inR;
-
-        UpdateLookupIndices();
-
-        char j;
-        for (j = 0; j < PHASER_NUM_NOTCHES; ++j) {
-            fix32 c0 = ComputeLookupValue(j);
-            y = AllPassNextNext(j << 1, y, c0);
-        }
-
-        mix = multfix32(PHASER_FACTOR_0250, y + inR);
-
-        outL = mix;
-        outR = mix;
-
-        // loop end processing
-        // (including reading the ADC channels)
-        LOOP_END();
-
-    }
-}
 
 /*
  * Flash the LEDs at startup.

@@ -8,6 +8,7 @@
       <itemPath>../include/fixed.h</itemPath>
       <itemPath>../include/phaser.h</itemPath>
       <itemPath>../include/table.h</itemPath>
+      <itemPath>../include/bypass.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"

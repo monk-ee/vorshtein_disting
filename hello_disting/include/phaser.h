@@ -97,5 +97,42 @@ static void AllPassInit()
     }
 }
 
+/*
+ * Phaser algorithm loop
+ */
+void doAlgorithm0(fix32 feedback)
+{
+    // setup
+    DECLARATIONS();
+
+    fix32 mix = 0;
+    
+    for (;;) {
+        // wait for new audio frame
+        IDLE();
+
+        // y = feedback * mix + x;
+        fix32 y = multfix32(mix, feedback) + inR;
+
+        UpdateLookupIndices();
+
+        char j;
+        for (j = 0; j < PHASER_NUM_NOTCHES; ++j) {
+            fix32 c0 = ComputeLookupValue(j);
+            y = AllPassNextNext(j << 1, y, c0);
+        }
+
+        mix = multfix32(PHASER_FACTOR_0250, y + inR);
+
+        outL = mix;
+        outR = mix;
+
+        // loop end processing
+        // (including reading the ADC channels)
+        LOOP_END();
+
+    }
+}
+
 
 #endif // ALLPASS_H_INCLUDED
