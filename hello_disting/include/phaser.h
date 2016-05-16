@@ -30,7 +30,7 @@ static inline void UpdateLookupIndices()
 #define __DISTING_ADC_MAX_HALF__ (4194303)
 #define __DISTING_ADC_MAX__ (8388606)
 
-    register fix32 in = inL + __DISTING_ADC_MAX_HALF__;
+    register fix32 in = inX + __DISTING_ADC_MAX_HALF__;
     
     if (in > __DISTING_ADC_MAX__) {
         in = __DISTING_ADC_MAX__;
@@ -112,7 +112,7 @@ void doAlgorithm0(fix32 feedback)
         IDLE();
 
         // y = feedback * mix + x;
-        fix32 y = multfix32(mix, feedback) + inR;
+        fix32 y = multfix32(mix, feedback) + inY;
 
         UpdateLookupIndices();
 
@@ -122,10 +122,11 @@ void doAlgorithm0(fix32 feedback)
             y = AllPassNextNext(j << 1, y, c0);
         }
 
-        mix = multfix32(PHASER_FACTOR_0250, y + inR);
-
-        outL = mix;
-        outR = mix;
+        
+        mix = multfix32(PHASER_FACTOR_0250, y + inY);
+        
+        outA = mix;
+        outB = mix;
 
         // loop end processing
         // (including reading the ADC channels)

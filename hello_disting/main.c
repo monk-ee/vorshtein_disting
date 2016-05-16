@@ -45,10 +45,9 @@ SOFTWARE.
 
 // 'time' counter. updates once per audio frame.
 volatile unsigned int time = 0;
-// the left and right inputs from the codec
-volatile int inL = 0, inR = 0;
+//volatile int inX = 0, inY = 0;
 // data to be sent to the codec
-int outL = 0, outR = 0;
+//int outA = 0, outA = 0;
 
 // the 'selector' pot value (the top one)
 int selector = 0x20;
@@ -293,7 +292,7 @@ void __ISR(_SPI_1_VECTOR, ipl3) SPI1InterruptHandler(void)
         static int toggleData = 0;
         time += toggleData;
 
-        SPI1BUF = toggleData ? outL : outR;
+        SPI1BUF = toggleData ? outA : outB;
         toggleData = 1 - toggleData;
         IFS1bits.SPI1TXIF = 0;
     }
@@ -303,9 +302,9 @@ void __ISR(_SPI_1_VECTOR, ipl3) SPI1InterruptHandler(void)
         int raw = SPI1BUF;
         raw = (raw << 8) >> 8;
         if (toggleData)
-            inL = raw;
+            inX = raw;
         else
-            inR = raw;
+            inY = raw;
         toggleData = !toggleData;
         IFS1bits.SPI1RXIF = 0;
     }

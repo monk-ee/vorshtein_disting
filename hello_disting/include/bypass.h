@@ -3,7 +3,7 @@
 
 #include "global.h"
 
-static void doBypass()
+void doBypass()
 {
     // setup
     DECLARATIONS();
@@ -12,14 +12,14 @@ static void doBypass()
         // wait for new audio frame
         IDLE();
 
-        int x = inL;
-        int y = inR;
+        int x = inX;
+        int y = inY;
 
         // do the processing
 
         // write the outputs
-        outL = x;
-        outR = y;
+        outA = x;
+        outB = y;
 
         // loop end processing
         // (including reading the ADC channels)

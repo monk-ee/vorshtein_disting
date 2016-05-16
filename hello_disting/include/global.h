@@ -51,8 +51,12 @@ extern void ErrorHalt();
 #define SPI_SRC_DIV     8 //8
 
 extern volatile unsigned int time;
-extern volatile int inL, inR;
-extern int outL, outR;
+
+// the left and right inputs from the codec
+/*extern*/ volatile int inX, inY;
+
+// data to be sent to the codec
+/*extern*/ int outA, outB;
 
 #define DECLARATIONS()              \
     unsigned int thisTime, lastTime = time;
