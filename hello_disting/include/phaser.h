@@ -40,11 +40,11 @@ static inline void UpdateLookupIndices()
     }
 
     register fix32 __pot = (pot + POTMAX) << 19;
-    //pot <<= (31 - 10 - 2);
+    //pot <<= (30 - 10 - 1);
 
-    register fix32* p_coeff;
-    char i;
-    for (i = 0, p_coeff = __coeff; i < PHASER_NUM_NOTCHES; ++i, ++p_coeff) {
+    register fix32* p_coeff = __coeff;
+    register fix32* p_coeff_max = p_coeff + PHASER_NUM_NOTCHES;
+    for (; p_coeff < p_coeff_max; ++p_coeff) {
         in = multfix32(in, __pot);
         *p_coeff = in;
     }
@@ -111,6 +111,7 @@ void doAlgorithm0(fix32 feedback)
         // wait for new audio frame
         IDLE();
 
+        
         // y = feedback * mix + x;
         fix32 y = multfix32(mix, feedback) + inY;
 
