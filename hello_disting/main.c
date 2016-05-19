@@ -112,7 +112,8 @@ int readADC()
     return ret;
 }
 
-static int ledseq[8][2] = {
+static int ledseq[8][2] = 
+{ 
     { BIT_3, 0}, // 0
     { 0, BIT_15}, // 1
     { 0, BIT_10}, // 6
@@ -261,13 +262,13 @@ int main(int argc, char** argv)
     for (;;) {
         switch (selector) {
         case 0:
-            doAlgorithm0(PHASER_FEEDBACK_0000);
+            doPhaser(PHASER_FEEDBACK_0000);
             break;
         case 1:
-            doAlgorithm0(PHASER_FEEDBACK_1000);
+            doPhaser(PHASER_FEEDBACK_1000);
             break;
         case 2:
-            doAlgorithm0(PHASER_FEEDBACK_2000);
+            doPhaser(PHASER_FEEDBACK_2000);
             break;
         default:
             doBypass();
