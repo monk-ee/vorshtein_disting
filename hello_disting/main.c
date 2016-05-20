@@ -31,6 +31,7 @@ SOFTWARE.
 
 #include "phaser.h"
 #include "bypass.h"
+#include "leds.h"
 
 // Configuration Bit settings
 // SYSCLK = 40 MHz (8MHz internal OSC / FPLLIDIV * FPLLMUL / FPLLODIV)

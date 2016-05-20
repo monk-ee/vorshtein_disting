@@ -3,9 +3,10 @@
 
 #include "global.h"
 #include "table.h"
+#include "leds.h"
 
-#define PHASER_NUM_NOTCHES (18)
-#define PHASER_NUM_FILTERS (36)
+#define PHASER_NUM_NOTCHES (16)
+#define PHASER_NUM_FILTERS (32)
 
 #define POTMIN (157)
 #define POTMAX (934)
@@ -97,55 +98,6 @@ static void AllPassInit()
     }
 }
 
-/***
- * 0,BIT_4    BIT_3,0
- * 0,BIT_12   0,BIT_15
- * 0,BIT_10   0,BIT_11
- * 0,BIT_6    0,BIT_7
- * 
- */
-
-static unsigned int __leds[8][2] = { 
-    {0, BIT_4}, {BIT_3, 0},
-    {0, BIT_12}, {0, BIT_15},
-    {0, BIT_10}, {0, BIT_11},
-    {0, BIT_6}, {0, BIT_7}
-};
-
-static unsigned int __count = 0;
-static unsigned int __state = 0;
-static unsigned int __led_idx = 0;
-
-static inline stepLeds()
-{
-    
-    if (++__count & BIT_12) {
-
-        if (__state == 0) {
-            
-            PORTASET = __leds[__led_idx][0];
-            PORTBSET = __leds[__led_idx][1];
-            
-            __state = 1;
-        }
-        else if (__state == 1) {
-            
-            PORTACLR = __leds[__led_idx][0];
-            PORTBCLR = __leds[__led_idx][1];
-
-            __state = 2;
-        } else if (__state == 2) {
-            if (++__led_idx > 7) {
-                __led_idx = 0;
-            }
-            
-            __state = 0;
-        }
-        
-        __count = 0;
-    }
-}
-
 /*
  * Phaser algorithm loop
  */
@@ -160,11 +112,11 @@ void doPhaser(fix32 feedback)
         // wait for new audio frame
         IDLE();
 
-        //stepLeds();
-
 
         // y = feedback * mix + x;
         fix32 y = multfix32(mix, feedback) + inY;
+
+        doLeds(y);
 
         UpdateLookupIndices();
 

@@ -2,6 +2,7 @@
 #define	BYPASS_H
 
 #include "global.h"
+#include "leds.h"
 
 void doBypass()
 {
@@ -14,8 +15,9 @@ void doBypass()
 
         int x = inX;
         int y = inY;
-
+        
         // do the processing
+        doLeds(y);
 
         // write the outputs
         outA = x;
