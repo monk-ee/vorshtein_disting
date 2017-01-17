@@ -9,6 +9,8 @@
       <itemPath>../include/table.h</itemPath>
       <itemPath>../include/bypass.h</itemPath>
       <itemPath>../include/global.h</itemPath>
+      <itemPath>../include/cvrecorder.h</itemPath>
+      <itemPath>../include/leds.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"

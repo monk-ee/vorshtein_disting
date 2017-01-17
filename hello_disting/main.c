@@ -31,6 +31,7 @@ SOFTWARE.
 
 #include "phaser.h"
 #include "bypass.h"
+#include "cvrecorder.h"
 #include "leds.h"
 
 // Configuration Bit settings
@@ -61,8 +62,7 @@ int looper = 0;
 /*
  * Wait a while.
  */
-void delayLoop(int count)
-{
+void delayLoop(int count) {
     // once code optimisation is enabled,
     // put this line in to retain similar timing
     //    count *= 5;
@@ -77,8 +77,7 @@ void delayLoop(int count)
  * Read the ADC channels (the selector pot and the Z pot).
  * Returns '1' if the algorithm processing loop should end.
  */
-int readADC()
-{
+int readADC() {
     int ret = 0;
 
     // Determine which buffer is idle and create an offset
@@ -113,8 +112,7 @@ int readADC()
     return ret;
 }
 
-static int ledseq[8][2] = 
-{ 
+static int ledseq[8][2] ={
     { BIT_3, 0}, // 0
     { 0, BIT_15}, // 1
     { 0, BIT_10}, // 6
@@ -128,8 +126,7 @@ static int ledseq[8][2] =
 /*
  * Flash the LEDs at startup.
  */
-void startupSequence()
-{
+void startupSequence() {
     PORTA = 0;
     PORTB = 0;
     int apins = BIT_2 | BIT_3;
@@ -154,8 +151,7 @@ void startupSequence()
 /*
  * Main program entry point.
  */
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
     UINT spi_con1 = 0, spi_con2 = 0;
 
     // basic system config
@@ -262,18 +258,20 @@ int main(int argc, char** argv)
     // main loop (never quits)
     for (;;) {
         switch (selector) {
-        case 0:
-            doPhaser(PHASER_FEEDBACK_0000);
-            break;
-        case 1:
-            doPhaser(PHASER_FEEDBACK_1000);
-            break;
-        case 2:
-            doPhaser(PHASER_FEEDBACK_2000);
-            break;
-        default:
-            doBypass();
-            break;
+            case 0:
+                doPhaser(PHASER_FEEDBACK_0000);
+                break;
+            case 1:
+                doPhaser(PHASER_FEEDBACK_1000);
+                break;
+            case 2:
+                doPhaser(PHASER_FEEDBACK_2000);
+                break;
+            case 15:
+                doCvRecorder();
+            default:
+                doBypass();
+                break;
 
         }
     }
@@ -288,8 +286,7 @@ int main(int argc, char** argv)
  * Read new data from the codec;
  * write new data to the codec.
  */
-void __ISR(_SPI_1_VECTOR, ipl3) SPI1InterruptHandler(void)
-{
+void __ISR(_SPI_1_VECTOR, ipl3) SPI1InterruptHandler(void) {
     if (IFS1bits.SPI1TXIF) {
         static int toggleData = 0;
         time += toggleData;

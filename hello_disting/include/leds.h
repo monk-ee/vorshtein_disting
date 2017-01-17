@@ -35,8 +35,27 @@ static unsigned int __state = 0;
 static unsigned int __curr_idx = 0;
 static unsigned int __prev_idx = 7;
 
-static inline stepLeds()
+
+static inline setLed(int led_idx, int on)
 {
+    if (led_idx < 0 || led_idx > 7) {
+        return;
+    }
+    
+    if (on) {
+        PORTASET = __leds[led_idx][0];
+        PORTBSET = __leds[led_idx][1];
+    } else {
+        PORTACLR = __leds[led_idx][0];
+        PORTBCLR = __leds[led_idx][1];
+    }
+    
+}
+
+
+
+
+static inline stepLeds() {
 
     if (__state == 0) {
         PORTACLR = __leds[__curr_idx][0];
@@ -46,8 +65,7 @@ static inline stepLeds()
         PORTBSET = __leds[__prev_idx][1];
 
         __state = 1;
-    }
-    else if (__state == 1) {
+    } else if (__state == 1) {
         PORTACLR = __leds[__prev_idx][0];
         PORTBCLR = __leds[__prev_idx][1];
 
@@ -55,8 +73,7 @@ static inline stepLeds()
         PORTBSET = __leds[__curr_idx][1];
 
         __state = 2;
-    }
-    else if (__state == 2) {
+    } else if (__state == 2) {
         __prev_idx = __curr_idx;
         if (++__curr_idx > 7) {
             __curr_idx = 0;
@@ -67,9 +84,7 @@ static inline stepLeds()
 
 }
 
-
-static inline doLeds(register const fix32 y)
-{
+static inline doLeds(register const fix32 y) {
     static fix32 prevY;
     static unsigned int __count;
 
@@ -81,7 +96,7 @@ static inline doLeds(register const fix32 y)
         }
 
     }
-    
+
     prevY = y;
 
 }
@@ -118,7 +133,7 @@ static inline doLeds()
 
     prevY = inY;
 }
-*/
+ */
 
 #endif	/* LEDS_H */
 
