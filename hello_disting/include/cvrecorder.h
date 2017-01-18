@@ -9,62 +9,52 @@
 
 static short __cvbuf[CVBUF_SIZE];
 
-void inline cvRecord(int x, int y) {
-    static int head = 0;
-    
-    *(__cvbuf + head++) = (short) (x >> 8);
+static int __subsample_factor = 1;
 
-    if (head > CVBUF_END) {
-        head = 0;
-    }
-    
-    *(__cvbuf + head) = (short) (y >> 8);
+static int __head = 0;
+static int __count = 0;
+
+void inline cvRecord(int x, int y) {
+    *(__cvbuf + __head) = (short) (x >> 8);
+    *(__cvbuf + __head + 1) = (short) (y >> 8);
 }
 
 void inline cvPlay(int* x, int* y) {
-    static int head = 0;
-    
-    *x = *(__cvbuf + head++) << 8;
-    
-    if (head > CVBUF_END) {
-        head = 0;
-    }
-    
-    *y = *(__cvbuf + head) << 8;
+    *x = *(__cvbuf + __head) << 8;
+    *y = *(__cvbuf + __head + 1) << 8;
 }
 
-
-void doCvRecorder()
-{
+void doCvRecorder(int sub) {
     // setup
     DECLARATIONS();
 
+    __subsample_factor = sub;
     for (;;) {
         // wait for new audio frame
         IDLE();
 
         int x = inX;
         int y = inY;
-        
+
         // do the processing
         //doLeds(y);
 
-        if (pot > 512) {
-            setLed(0, 1);
-            setLed(1, 1);
-            setLed(2, 1);
-            setLed(3, 1);
-            setLed(4, 1);
-            setLed(5, 1);
-            setLed(6, 1);
-            setLed(7, 1);
-            cvRecord(x, y);
+        if (__count++ >= __subsample_factor) {
+            __count = 0;
 
-        } else { 
-            doLeds(outA);
+            if (pot > 512) {
+                cvRecord(x, y);
+            } else {
+
+            }
+            cvPlay(&outA, &outB);
+            __head += 2;
+
+            if (__head >= CVBUF_END) {
+                __head = 0;
+            }
+
         }
-        
-        cvPlay(&outA, &outB);
 
         // loop end processing
         // (including reading the ADC channels)
