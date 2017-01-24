@@ -112,7 +112,7 @@ int readADC() {
     return ret;
 }
 
-static int ledseq[8][2] ={
+static int ledseq[8][2] = {
     { BIT_3, 0}, // 0
     { 0, BIT_15}, // 1
     { 0, BIT_10}, // 6
@@ -267,10 +267,27 @@ int main(int argc, char** argv) {
             case 2:
                 doPhaser(PHASER_FEEDBACK_2000);
                 break;
-            case 15:
+
+              
+                
+            case 8:
+            case 9:
+                doCvRecorder(4);
+                break;
+            case 10:
+            case 11:
+                doCvRecorder(8);
+                break;
+            case 12:
+            case 13:
                 doCvRecorder(16);
+                break;
+            case 14:
+            case 15:
+                doCvRecorder(32);
+                break;
             default:
-                doBypass();
+                doCvRecorder(1);
                 break;
 
         }

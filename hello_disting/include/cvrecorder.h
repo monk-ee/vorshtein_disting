@@ -4,7 +4,7 @@
 #include "global.h"
 #include "leds.h"
 
-#define CVBUF_SIZE (4096)
+#define CVBUF_SIZE (8000)
 
 static fix32 __cvbuf[CVBUF_SIZE];
 
@@ -46,6 +46,8 @@ void inline cvPlay(
 
     *xOut = linterp(weight, xCurr, xNext);
     //*yOut = linterp_opt(weight, yCurr, yNext);
+    
+    // still want to be able to compare with regular output
     *yOut = yCurr;
 
 }
@@ -62,8 +64,10 @@ void doCvRecorder(register fix32 subSampleTicks) {
         // do the processing
         //doLeds(y);
 
-        if (++subSampleCount > subSampleTicks) {
-            subSampleCount = 1;
+        // TODO: something is a bit off, causing slow degradation. Fix it!
+        
+        if (++subSampleCount >= subSampleTicks) {
+            subSampleCount = 0;
 
             if (pot > 127) {
                 cvRecord(inX, inY);
@@ -71,22 +75,18 @@ void doCvRecorder(register fix32 subSampleTicks) {
 
             __head += 2;
 
-            if (__head > CVBUF_SIZE - 2) {
+            if (__head > CVBUF_SIZE - 3) {
                 __head = 0;
             }
+            
         } else {
             register fix32 weight = divfix32(subSampleCount, subSampleTicks);
             cvPlay(&outA, &outB, weight);
         }
 
-
-
-
-
         // loop end processing
         // (including reading the ADC channels)
         LOOP_END();
-
     }
 }
 
