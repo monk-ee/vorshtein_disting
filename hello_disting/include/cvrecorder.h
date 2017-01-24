@@ -4,74 +4,84 @@
 #include "global.h"
 #include "leds.h"
 
-#define CVBUF_SIZE (6 * 4096)
+#define CVBUF_SIZE (4096)
 
-static fix16 __cvbuf[CVBUF_SIZE];
+static fix32 __cvbuf[CVBUF_SIZE];
 
 static int __subsample_factor = 1;
 static int __count = 0;
 
 static int __head = 0;
 
-void inline cvRecord(register fix16 x, register fix16 y) {
-    register short* pWrite = __cvbuf + __head;
+void inline cvRecord(
+        register fix32 x,
+        register fix32 y) {
 
-    *pWrite = x;
-    *(pWrite + 1) = y;
+    register fix32* pBuffer = __cvbuf + __head;
+
+    *pBuffer = x;
+    *(pBuffer + 1) = y;
 }
 
-void inline cvPlay(register fix32* x, register fix32* y) {
-    register fix16* pw = __cvbuf + __head;
+void inline cvPlay(
+        register fix32* xOut,
+        register fix32* yOut,
+        register fix32 weight) {
 
-    *x = *pw << 8;
-    *y = *(pw + 1) << 8;
+    register fix32* pBuffer = __cvbuf + __head;
 
-    
-    // TODO: linear interpolation
-    
-    register short next_x;
-    register short next_y;
+    register fix32 xCurr = *pBuffer;
+    register fix32 yCurr = *(pBuffer + 1);
 
-    if (__head < CVBUF_SIZE - 3) {
-        next_x = *(pw + 2);
-        next_y = *(pw + 3);
+    register fix32 xNext;
+    register fix32 yNext;
+
+    if (__head < (CVBUF_SIZE - 3)) {
+        xNext = *(pBuffer + 2);
+        yNext = *(pBuffer + 3);
     } else {
-        next_x = *__cvbuf;
-        next_y = *(__cvbuf + 1);
+        xNext = *__cvbuf;
+        yNext = *(__cvbuf + 1);
     }
+
+    *xOut = linterp(weight, xCurr, xNext);
+    //*yOut = linterp_opt(weight, yCurr, yNext);
+    *yOut = yCurr;
+
 }
 
-void doCvRecorder(int sub) {
+void doCvRecorder(register fix32 subSampleTicks) {
     // setup
     DECLARATIONS();
+    static fix32 subSampleCount = 0;
 
-    __subsample_factor = sub;
     for (;;) {
         // wait for new audio frame
         IDLE();
 
-        fix16 x = inX >> 8;
-        fix16 y = inY >> 8;
-
         // do the processing
         //doLeds(y);
 
-        if (__count++ >= __subsample_factor) {
-            __count = 0;
+        if (++subSampleCount > subSampleTicks) {
+            subSampleCount = 1;
 
-            if (pot > 512) {
-                cvRecord(x, y);
-            } else {
-
+            if (pot > 127) {
+                cvRecord(inX, inY);
             }
+
             __head += 2;
 
             if (__head > CVBUF_SIZE - 2) {
                 __head = 0;
             }
+        } else {
+            register fix32 weight = divfix32(subSampleCount, subSampleTicks);
+            cvPlay(&outA, &outB, weight);
         }
 
-        cvPlay(&outA, &outB);
+
+
+
 
         // loop end processing
         // (including reading the ADC channels)

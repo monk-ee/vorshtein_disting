@@ -268,7 +268,7 @@ int main(int argc, char** argv) {
                 doPhaser(PHASER_FEEDBACK_2000);
                 break;
             case 15:
-                doCvRecorder(4);
+                doCvRecorder(16);
             default:
                 doBypass();
                 break;
