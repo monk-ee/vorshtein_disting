@@ -4,52 +4,47 @@
 #include "global.h"
 #include "leds.h"
 
-#define CVBUF_SIZE (8000)
+#define CVBUF_LEN (4096)
 
-static fix32 __cvbuf[CVBUF_SIZE];
+typedef struct {
+    fix32 x;
+    fix32 y;
+} frame_t;
 
-static int __subsample_factor = 1;
-static int __count = 0;
 
-static int __head = 0;
+static frame_t __cvBuffer[CVBUF_LEN];
 
-void inline cvRecord(
-        register fix32 x,
-        register fix32 y) {
+static int __pHead = 0;
 
-    register fix32* pBuffer = __cvbuf + __head;
-
-    *pBuffer = x;
-    *(pBuffer + 1) = y;
+void inline cvMoveHead() {
+    if (__pHead <= (CVBUF_LEN - 2)) {
+        __pHead++;
+    } else {
+        __pHead = 0;
+    }
 }
 
-void inline cvPlay(
-        register fix32* xOut,
-        register fix32* yOut,
-        register fix32 weight) {
+void inline cvWriteBuffer(register frame_t* inFrame) {
+    register frame_t* pWrite = __cvBuffer + __pHead;
+    *pWrite = *inFrame;
+}
 
-    register fix32* pBuffer = __cvbuf + __head;
+void inline cvReadBuffer(register frame_t* outFrame, register fix32 weight) {
 
-    register fix32 xCurr = *pBuffer;
-    register fix32 yCurr = *(pBuffer + 1);
+    frame_t currFrame;
+    frame_t nextFrame;
 
-    register fix32 xNext;
-    register fix32 yNext;
+    if (__pHead <= (CVBUF_LEN - 2)) {
+        currFrame = *(__cvBuffer + __pHead);
+        nextFrame = *(__cvBuffer + __pHead + 1);
 
-    if (__head < (CVBUF_SIZE - 3)) {
-        xNext = *(pBuffer + 2);
-        yNext = *(pBuffer + 3);
     } else {
-        xNext = *__cvbuf;
-        yNext = *(__cvbuf + 1);
+        currFrame = *(__cvBuffer);
+        nextFrame = *(__cvBuffer + 1);
     }
 
-    *xOut = linterp(weight, xCurr, xNext);
-    //*yOut = linterp_opt(weight, yCurr, yNext);
-    
-    // still want to be able to compare with regular output
-    *yOut = yCurr;
-
+    outFrame->x = linterp(weight, currFrame.x, nextFrame.x);
+    outFrame->y = linterp(weight, currFrame.y, nextFrame.y);
 }
 
 void doCvRecorder(register fix32 subSampleTicks) {
@@ -61,27 +56,27 @@ void doCvRecorder(register fix32 subSampleTicks) {
         // wait for new audio frame
         IDLE();
 
-        // do the processing
-        //doLeds(y);
-
-        // TODO: something is a bit off, causing slow degradation. Fix it!
-        
         if (++subSampleCount >= subSampleTicks) {
             subSampleCount = 0;
 
+            frame_t inFrame;
+            inFrame.x = inX;
+            inFrame.y = inY;
+
             if (pot > 127) {
-                cvRecord(inX, inY);
+                cvWriteBuffer(&inFrame);
             }
 
-            __head += 2;
+            cvMoveHead();
 
-            if (__head > CVBUF_SIZE - 3) {
-                __head = 0;
-            }
-            
         } else {
             register fix32 weight = divfix32(subSampleCount, subSampleTicks);
-            cvPlay(&outA, &outB, weight);
+            frame_t outFrame;
+            
+            cvReadBuffer(&outFrame, weight);
+            
+            outA = outFrame.x;
+            outB = outFrame.y;
         }
 
         // loop end processing
@@ -90,5 +85,5 @@ void doCvRecorder(register fix32 subSampleTicks) {
     }
 }
 
-#endif	/* BYPASS_H */
+#endif	/* CVRECORDER_H */
 
