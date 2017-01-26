@@ -25,7 +25,7 @@ typedef struct
 static allpass_filter_t __filter[PHASER_NUM_FILTERS];
 static fix32 __coeff[PHASER_NUM_NOTCHES];
 
-static inline void UpdateLookupIndices()
+static inline void updateLookupIndices()
 {
 #define __PHASER_IN_MIN__ (1 << (PHASER_NUM_NOTCHES + 1))
 #define __DISTING_ADC_MAX_HALF__ (4194303)
@@ -51,7 +51,7 @@ static inline void UpdateLookupIndices()
     }
 }
 
-static inline fix32 ComputeLookupValue(const char coeff_index)
+static inline fix32 computeLookupValue(const char coeff_index)
 {
 #define __LOOKUP_SHIFT_OPERAND__ ((DISTING_ADC_RESOLUTION - AP_LOOKUP_EXP - 1))
 
@@ -63,7 +63,7 @@ static inline fix32 ComputeLookupValue(const char coeff_index)
     return multfix32(d, *(base + 1) - *base) + *base;
 }
 
-static inline fix32 AllPassNextNext(register const fix32 filter_idx,
+static inline fix32 allPassNextNext(register const fix32 filter_idx,
                                     register fix32 x,
                                     register const fix32 coeff)
 {
@@ -89,7 +89,7 @@ static inline fix32 AllPassNextNext(register const fix32 filter_idx,
     return y;
 }
 
-static void AllPassInit()
+static void allPassInit()
 {
     int i;
     for (i = 0; i < PHASER_NUM_FILTERS; ++i) {
@@ -106,6 +106,10 @@ void doPhaser(fix32 feedback)
     // setup
     DECLARATIONS();
 
+    setLeds(0);
+    
+    allPassInit();
+    
     fix32 mix = 0;
 
     for (;;) {
@@ -116,14 +120,15 @@ void doPhaser(fix32 feedback)
         // y = feedback * mix + x;
         fix32 y = multfix32(mix, feedback) + inY;
 
-        doLeds(y);
-
-        UpdateLookupIndices();
+        //ledStepOnZeroCrossing(y);
+        ledConditionalStep(onZeroCrossing(y));
+        
+        updateLookupIndices();
 
         char j;
         for (j = 0; j < PHASER_NUM_NOTCHES; ++j) {
-            fix32 c0 = ComputeLookupValue(j);
-            y = AllPassNextNext(j << 1, y, c0);
+            fix32 c0 = computeLookupValue(j);
+            y = allPassNextNext(j << 1, y, c0);
         }
 
 

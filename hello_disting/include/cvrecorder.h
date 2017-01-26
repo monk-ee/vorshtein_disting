@@ -4,53 +4,61 @@
 #include "global.h"
 #include "leds.h"
 
-#define CVBUF_LEN (4096)
+#define __CVRECORDER_Z_TRESH__ (127)
+
+#define __CVRECORDER_BUFFER_LENGTH__ (4096)
 
 typedef struct {
     fix32 x;
     fix32 y;
 } frame_t;
 
-
-static frame_t __cvBuffer[CVBUF_LEN];
-
-static int __pHead = 0;
+static frame_t  __cvBuffer[__CVRECORDER_BUFFER_LENGTH__];
+static int      __pHead  = 0;
+static int      __pStart = 0;
+static int      __pEnd   = __CVRECORDER_BUFFER_LENGTH__;
 
 void inline cvMoveHead() {
-    if (__pHead <= (CVBUF_LEN - 2)) {
+    if (__pHead < (__pEnd - 1)) {
         __pHead++;
     } else {
-        __pHead = 0;
+        __pHead = __pStart;
     }
 }
 
-void inline cvWriteBuffer(register frame_t* inFrame) {
-    register frame_t* pWrite = __cvBuffer + __pHead;
-    *pWrite = *inFrame;
+void inline 
+cvWriteBuffer(const frame_t* inFrame) {
+    
+    *(__cvBuffer + __pHead) = *inFrame;
+    
 }
 
-void inline cvReadBuffer(register frame_t* outFrame, register fix32 weight) {
+void inline 
+cvReadBuffer(frame_t* outFrame, const fix32 weight) {
 
     frame_t currFrame;
     frame_t nextFrame;
 
-    if (__pHead <= (CVBUF_LEN - 2)) {
+    if (__pHead >= __pStart && __pHead < (__pEnd - 1)) {
         currFrame = *(__cvBuffer + __pHead);
         nextFrame = *(__cvBuffer + __pHead + 1);
-
     } else {
-        currFrame = *(__cvBuffer);
-        nextFrame = *(__cvBuffer + 1);
+        currFrame = *(__cvBuffer + __pStart);
+        nextFrame = *(__cvBuffer + __pStart + 1);
     }
 
     outFrame->x = linterp(weight, currFrame.x, nextFrame.x);
     outFrame->y = linterp(weight, currFrame.y, nextFrame.y);
 }
 
-void doCvRecorder(register fix32 subSampleTicks) {
+void 
+doCvRecorder(const fix16 subSampleTicks) {
     // setup
     DECLARATIONS();
-    static fix32 subSampleCount = 0;
+    
+    setLeds('C');
+    
+    static fix16 subSampleCount = 0;
 
     for (;;) {
         // wait for new audio frame
@@ -63,20 +71,22 @@ void doCvRecorder(register fix32 subSampleTicks) {
             inFrame.x = inX;
             inFrame.y = inY;
 
-            if (pot > 127) {
+            if (pot > __CVRECORDER_Z_TRESH__) {
                 cvWriteBuffer(&inFrame);
+                //setLeds('R');
             }
 
             cvMoveHead();
 
         } else {
-            register fix32 weight = divfix32(subSampleCount, subSampleTicks);
             frame_t outFrame;
-            
+            fix32 weight = divfix32(subSampleCount, subSampleTicks);
             cvReadBuffer(&outFrame, weight);
             
             outA = outFrame.x;
             outB = outFrame.y;
+            
+            //setLeds('P');
         }
 
         // loop end processing

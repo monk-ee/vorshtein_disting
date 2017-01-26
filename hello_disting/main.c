@@ -253,8 +253,6 @@ int main(int argc, char** argv) {
     SpiChnPutC(SPI_CHANNEL1, 0); //Dummy write to start the SPI
     SpiChnPutC(SPI_CHANNEL1, 0); //Dummy write to start the SPI
 
-    AllPassInit();
-
     // main loop (never quits)
     for (;;) {
         switch (selector) {
@@ -287,7 +285,7 @@ int main(int argc, char** argv) {
                 doCvRecorder(32);
                 break;
             default:
-                doCvRecorder(1);
+                doBypass();
                 break;
 
         }

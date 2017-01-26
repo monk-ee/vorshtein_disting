@@ -3,6 +3,8 @@
 
 typedef signed int fix32 ;
 typedef signed short fix16;
+typedef unsigned int uint32;
+
 
 #define MAX_30 (1073741824)
 
