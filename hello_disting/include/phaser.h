@@ -121,7 +121,7 @@ void doPhaser(fix32 feedback)
         fix32 y = multfix32(mix, feedback) + inY;
 
         //ledStepOnZeroCrossing(y);
-        ledConditionalStep(onZeroCrossing(y));
+        ledsConditionalCycle(onZeroCrossing(y));
         
         updateLookupIndices();
 

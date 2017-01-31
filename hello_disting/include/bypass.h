@@ -18,7 +18,7 @@ void doBypass()
         
         // do the processing
         //ledStepOnZeroCrossing(y);
-        ledConditionalStep(onZeroCrossing(y));
+        ledsConditionalCycle(onZeroCrossing(y));
         
         // write the outputs
         outA = x;

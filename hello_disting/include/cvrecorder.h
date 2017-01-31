@@ -4,9 +4,11 @@
 #include "global.h"
 #include "leds.h"
 
-#define __CVRECORDER_Z_TRESH__ (127)
+#define __CVRECORDER_Z_TRESH__ (256)
 
 #define __CVRECORDER_BUFFER_LENGTH__ (4096)
+
+#define cvWriteIndicator() (pot > __CVRECORDER_Z_TRESH__)
 
 typedef struct {
     fix32 x;
@@ -20,7 +22,7 @@ static int      __pEnd   = __CVRECORDER_BUFFER_LENGTH__;
 
 void inline cvMoveHead() {
     if (__pHead < (__pEnd - 1)) {
-        __pHead++;
+        ++__pHead;
     } else {
         __pHead = __pStart;
     }
@@ -56,13 +58,21 @@ doCvRecorder(const fix16 subSampleTicks) {
     // setup
     DECLARATIONS();
     
-    setLeds('C');
-    
     static fix16 subSampleCount = 0;
 
+    ledsLock('P');
+    
     for (;;) {
         // wait for new audio frame
         IDLE();
+        
+        if (cvWriteIndicator() && ledsLocked('P')) {
+            setLeds('R');
+            ledsLock('R');
+        } else {
+            ledsCycle(256);
+            ledsLock('P');
+        }
 
         if (++subSampleCount >= subSampleTicks) {
             subSampleCount = 0;
@@ -71,11 +81,11 @@ doCvRecorder(const fix16 subSampleTicks) {
             inFrame.x = inX;
             inFrame.y = inY;
 
-            if (pot > __CVRECORDER_Z_TRESH__) {
+            if (cvWriteIndicator()) {
                 cvWriteBuffer(&inFrame);
-                //setLeds('R');
+                      
             }
-
+            
             cvMoveHead();
 
         } else {
@@ -85,8 +95,7 @@ doCvRecorder(const fix16 subSampleTicks) {
             
             outA = outFrame.x;
             outB = outFrame.y;
-            
-            //setLeds('P');
+                        
         }
 
         // loop end processing

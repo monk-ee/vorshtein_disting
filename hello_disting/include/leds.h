@@ -10,23 +10,48 @@
 
 #include "global.h"
 
+static char __leds_lock = 0xFF;
+
+#define ledsLocked(key) (__leds_lock == key)
+
+#define ledsLock(key) {__leds_lock = key; }
 
 
-#define __LED0__ {0, BIT_4}
-#define __LED1__ {BIT_3, 0}
-#define __LED2__ {0, BIT_15}
-#define __LED3__ {0, BIT_11}
-#define __LED4__ {0, BIT_7}
-#define __LED5__ {0, BIT_6}
+
+/*
+    { BIT_3, 0 },
+    { 0, BIT_15 },
+    { 0, BIT_11 },
+    { 0, BIT_7 },
+    { 0, BIT_4 },
+    { 0, BIT_12 },
+    { 0, BIT_10 },
+    { 0, BIT_6 },
+
+ */
+
+
+#define __LED0__ {BIT_3, 0}
+
+#define __LED1__ {0, BIT_15}
+
+#define __LED2__ {0, BIT_11}
+
+#define __LED3__ {0, BIT_7}
+
+#define __LED4__ {0, BIT_4}
+
+#define __LED5__ {0, BIT_12}
+
 #define __LED6__ {0, BIT_10}
-#define __LED7__ {0, BIT_12}
+
+#define __LED7__ {0, BIT_6}
 
 /**
-    0   1
-    7   2
-    6   3
-    5   4
- 
+ *  4   0
+ *  5   1
+ *  6   2
+ *  7   3
  **/
 static unsigned int __leds[8][2] = {
     __LED0__,
@@ -39,14 +64,12 @@ static unsigned int __leds[8][2] = {
     __LED7__
 };
 
-static unsigned int __state = 0;
-static unsigned int __curr_idx = 0;
-static unsigned int __prev_idx = 7;
 
-#define LED_OFF(index)  PORTACLR = __leds[index][0]; PORTBCLR = __leds[index][1];
-#define LED_ON(index)   PORTASET = __leds[index][0]; PORTBSET = __leds[index][1];
 
-static void 
+#define LED_OFF(index)  {PORTACLR = __leds[index][0]; PORTBCLR = __leds[index][1];}
+#define LED_ON(index)   {PORTASET = __leds[index][0]; PORTBSET = __leds[index][1];}
+
+static void
 ledsOff() {
     LED_OFF(0)
     LED_OFF(1)
@@ -58,59 +81,25 @@ ledsOff() {
     LED_OFF(7)
 }
 
-static void 
-ledsP() {
-    LED_ON(0)
-    LED_ON(1)
-    LED_ON(7)
-    LED_ON(2)
-    LED_OFF(6)
-    LED_OFF(3)
-    LED_OFF(5)
-    LED_ON(4)
-}
-
 static void
 ledsR() {
+    LED_OFF(4)
     LED_OFF(0)
+    LED_OFF(5)
     LED_OFF(1)
-    LED_OFF(7)
-    LED_OFF(2)
     LED_ON(6)
-    LED_ON(3)
-    LED_ON(5)
-    LED_ON(4)
-}
-
-static void 
-ledsC() {
-    LED_ON(0)
-    LED_ON(1)
-    LED_OFF(2)
-    LED_OFF(3)
-    LED_ON(4)
-    LED_ON(5)
-    LED_ON(6)
+    LED_ON(2)
     LED_ON(7)
+    LED_ON(3)
 }
 
 
-void 
-setLeds(char mode) {
-    static char lastMode;
-    if (mode == lastMode) {
-        return;
-    }
-    
-    lastMode = mode;
-    
+
+
+void
+setLeds(const char mode) {
+
     switch (mode) {
-        case 'P':
-            ledsP();
-            break;
-        case 'C':
-            ledsC();
-            break;
         case 'R':
             ledsR();
             break;
@@ -122,7 +111,7 @@ setLeds(char mode) {
     }
 }
 
-inline char 
+inline char
 onZeroCrossing(const fix32 x) {
     static fix32 prevX;
     static fix16 count;
@@ -139,8 +128,18 @@ onZeroCrossing(const fix32 x) {
     return 0;
 }
 
-static inline void ledStep() {
-
+static inline void ledsCycle(unsigned short yo) {
+    static char __state = 0;
+    static char __curr_idx = 0;
+    static char __prev_idx = 7;
+    static unsigned short cycleCounter = 0;
+    
+    if (++cycleCounter >= yo) {
+        cycleCounter = 0;
+    } else {
+        return;
+    }
+    
     if (__state == 0) {
         LED_OFF(__curr_idx)
         LED_ON(__prev_idx)
@@ -161,9 +160,9 @@ static inline void ledStep() {
     }
 }
 
-static void ledConditionalStep(char doIt) {
+static void ledsConditionalCycle(char doIt) {
     if (doIt) {
-        ledStep();
+        ledsCycle(1);
     }
 }
 
