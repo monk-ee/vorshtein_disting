@@ -106,7 +106,7 @@ void doPhaser(fix32 feedback)
     // setup
     DECLARATIONS();
 
-    setLeds(0);
+    setLeds(0x76543210, 0b000000);
     
     allPassInit();
     

@@ -43,8 +43,8 @@ extern void ErrorHalt();
 
 #define SYS_FREQ 	(50000000L)
 
-//#define SAMPLE_RATE     78125
-#define SAMPLE_RATE     40000
+#define SAMPLE_RATE     78125
+//#define SAMPLE_RATE     40000
 
 #define RODIV		2 //0
 #define REFTRIM		0

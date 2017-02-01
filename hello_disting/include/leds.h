@@ -10,7 +10,7 @@
 
 #include "global.h"
 
-static char __leds_lock = 0xFF;
+static unsigned int __leds_lock = 0xFFFFFFFF;
 
 #define ledsLocked(key) (__leds_lock == key)
 
@@ -69,46 +69,26 @@ static unsigned int __leds[8][2] = {
 #define LED_OFF(index)  {PORTACLR = __leds[index][0]; PORTBCLR = __leds[index][1];}
 #define LED_ON(index)   {PORTASET = __leds[index][0]; PORTBSET = __leds[index][1];}
 
-static void
-ledsOff() {
-    LED_OFF(0)
-    LED_OFF(1)
-    LED_OFF(2)
-    LED_OFF(3)
-    LED_OFF(4)
-    LED_OFF(5)
-    LED_OFF(6)
-    LED_OFF(7)
-}
-
-static void
-ledsR() {
-    LED_OFF(4)
-    LED_OFF(0)
-    LED_OFF(5)
-    LED_OFF(1)
-    LED_ON(6)
-    LED_ON(2)
-    LED_ON(7)
-    LED_ON(3)
-}
-
-
-
-
+/* 
+ * pattern e.g 0x7643210
+ * 
+ * mask e.g 0b10101010
+ * 
+ * 
+ */
 void
-setLeds(const char mode) {
+setLeds(register unsigned int pattern,
+        register unsigned char mask) {
+    static unsigned int index;
 
-    switch (mode) {
-        case 'R':
-            ledsR();
-            break;
-        case 0:
-            ledsOff();
-            break;
-        default:
-            break;
+    for (index = pattern; index > 0; index >>= 4, mask >>= 1) {
+        if (mask & 0x1) {
+            LED_ON(index & 0x7);
+        } else {
+            LED_OFF(index & 0x7)
+        }
     }
+
 }
 
 inline char
@@ -128,41 +108,50 @@ onZeroCrossing(const fix32 x) {
     return 0;
 }
 
-static inline void ledsCycle(unsigned short yo) {
-    static char __state = 0;
-    static char __curr_idx = 0;
-    static char __prev_idx = 7;
+static inline void ledsCycle(register unsigned int seqFull,
+        register unsigned short slowDownFactor) {
+    static unsigned int seq = 0;
+    static unsigned char curr = 0;
+    static unsigned char prev = 0;
     static unsigned short cycleCounter = 0;
-    
-    if (++cycleCounter >= yo) {
+    static unsigned char state = 0;
+
+    if (++cycleCounter > slowDownFactor) {
         cycleCounter = 0;
     } else {
         return;
     }
-    
-    if (__state == 0) {
-        LED_OFF(__curr_idx)
-        LED_ON(__prev_idx)
 
-        __state = 1;
-    } else if (__state == 1) {
-        LED_OFF(__prev_idx)
-        LED_ON(__curr_idx)
+    if (state == 0) {
 
-        __state = 2;
-    } else if (__state == 2) {
-        __prev_idx = __curr_idx;
-        if (++__curr_idx > 7) {
-            __curr_idx = 0;
+        LED_OFF(curr)
+        LED_ON(prev)
+        state = 1;
+
+    } else if (state == 1) {
+
+        LED_OFF(prev)
+        LED_ON(curr)
+        state = 2;
+
+    } else if (state == 2) {
+
+        prev = curr;
+        seq >>= 4;
+        curr = seq & 0x7;
+
+        if (curr == 0) {
+            seq = seqFull;
+            curr = seq & 0x7;
         }
 
-        __state = 0;
+        state = 0;
     }
 }
 
 static void ledsConditionalCycle(char doIt) {
     if (doIt) {
-        ledsCycle(1);
+        ledsCycle(0x76543210, 1);
     }
 }
 

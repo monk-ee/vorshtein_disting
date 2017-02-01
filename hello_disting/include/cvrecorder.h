@@ -6,7 +6,7 @@
 
 #define __CVRECORDER_Z_TRESH__ (256)
 
-#define __CVRECORDER_BUFFER_LENGTH__ (4096)
+#define __CVRECORDER_BUFFER_LENGTH__ (SAMPLE_RATE / 200)
 
 #define cvWriteIndicator() (pot > __CVRECORDER_Z_TRESH__)
 
@@ -53,6 +53,21 @@ cvReadBuffer(frame_t* outFrame, const fix32 weight) {
     outFrame->y = linterp(weight, currFrame.y, nextFrame.y);
 }
 
+            /**
+            *  4   0
+            *  5   1
+            *  6   2
+            *  7   3
+            **/
+
+#define LEDS_ALL (0x40516273)
+
+#define LEDS_FW_CYCLE (0x45673210)
+
+#define LEDS_ALL_ON (0b11111111)
+
+#define LEDS_ALL_OFF (0b00000000)
+
 void 
 doCvRecorder(const fix16 subSampleTicks) {
     // setup
@@ -66,14 +81,17 @@ doCvRecorder(const fix16 subSampleTicks) {
         // wait for new audio frame
         IDLE();
         
-        if (cvWriteIndicator() && ledsLocked('P')) {
-            setLeds('R');
-            ledsLock('R');
+        if (cvWriteIndicator() && ledsLocked(LEDS_FW_CYCLE)) {
+            //setLeds(LEDS_ALL, LEDS_ALL_ON);
+            //ledsLock(LEDS_ALL);
         } else {
-            ledsCycle(256);
-            ledsLock('P');
+
+            
         }
 
+        ledsCycle(LEDS_FW_CYCLE, __CVRECORDER_BUFFER_LENGTH__ * 4);
+        ledsLock(LEDS_FW_CYCLE);
+        
         if (++subSampleCount >= subSampleTicks) {
             subSampleCount = 0;
 
