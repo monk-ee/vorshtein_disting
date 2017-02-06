@@ -270,19 +270,19 @@ int main(int argc, char** argv) {
                 
             case 8:
             case 9:
-                doCvRecorder(1);
+                doCvRecorder(64);
                 break;
             case 10:
             case 11:
-                doCvRecorder(5);
+                doCvRecorder(32);
                 break;
             case 12:
             case 13:
-                doCvRecorder(10);
+                doCvRecorder(16);
                 break;
             case 14:
             case 15:
-                doCvRecorder(SAMPLE_RATE / 800);
+                doCvRecorder(8);
                 break;
             default:
                 doBypass();

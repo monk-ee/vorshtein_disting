@@ -47,6 +47,24 @@ static unsigned int __leds_lock = 0xFFFFFFFF;
 
 #define __LED7__ {0, BIT_6}
 
+
+
+/**
+ *  4   0
+ *  5   1
+ *  6   2
+ *  7   3
+ **/
+
+#define LEDS_ALL (0x40516273)
+
+#define LEDS_FW_CYCLE (0x45673210)
+
+#define LEDS_ALL_ON (0b11111111)
+
+#define LEDS_ALL_OFF (0b00000000)
+
+
 /**
  *  4   0
  *  5   1
@@ -108,51 +126,70 @@ onZeroCrossing(const fix32 x) {
     return 0;
 }
 
-static inline void ledsCycle(register unsigned int seqFull,
-        register unsigned short slowDownFactor) {
-    static unsigned int seq = 0;
-    static unsigned char curr = 0;
-    static unsigned char prev = 0;
-    static unsigned short cycleCounter = 0;
-    static unsigned char state = 0;
+static unsigned int __lcSeq = 0;
+static unsigned char __lcCurr = 0;
+static unsigned char __lcPrev = 0;
+static unsigned char __lcTimeCount = 0;
+static unsigned char __lcState = 0;
 
-    if (++cycleCounter > slowDownFactor) {
-        cycleCounter = 0;
+static void
+ledsResetCycle() {
+    __lcSeq = 0;
+    __lcCurr = 0;
+    __lcPrev = 0;
+    __lcTimeCount = 0;
+    __lcState = 0;
+}
+
+static inline void
+ledsCycle(
+        register unsigned int seqFull,
+        register unsigned char timeDiv) {
+
+    timeDiv >>= 1;
+
+    if (++__lcTimeCount >= timeDiv) {
+        __lcTimeCount = 0;
     } else {
         return;
     }
 
-    if (state == 0) {
+    if (__lcState == 0) {
 
-        LED_OFF(curr)
-        LED_ON(prev)
-        state = 1;
+        LED_OFF(__lcCurr)
+        LED_ON(__lcPrev)
+        __lcState = 1;
 
-    } else if (state == 1) {
+        return;
 
-        LED_OFF(prev)
-        LED_ON(curr)
-        state = 2;
+    } else if (__lcState == 1) {
 
-    } else if (state == 2) {
+        LED_OFF(__lcPrev)
+        LED_ON(__lcCurr)
 
-        prev = curr;
-        seq >>= 4;
-        curr = seq & 0x7;
+        __lcPrev = __lcCurr;
+        __lcSeq >>= 4;
+        __lcCurr = __lcSeq & 0x7;
 
-        if (curr == 0) {
-            seq = seqFull;
-            curr = seq & 0x7;
+        if (__lcCurr == 0) {
+            __lcSeq = seqFull;
+            __lcCurr = __lcSeq & 0x7;
         }
 
-        state = 0;
+        __lcState = 0;
     }
 }
 
-static void ledsConditionalCycle(char doIt) {
+static void
+ledsConditionalCycle(
+        register unsigned int pattern,
+        register char doIt,
+        register unsigned char timeDiv) {
+
     if (doIt) {
-        ledsCycle(0x76543210, 1);
+        ledsCycle(pattern, timeDiv);
     }
+
 }
 
 

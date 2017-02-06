@@ -8,7 +8,9 @@ void doBypass()
 {
     // setup
     DECLARATIONS();
-
+    
+    setLeds(0x01234567, 0b00000000);
+    
     for (;;) {
         // wait for new audio frame
         IDLE();
@@ -18,7 +20,7 @@ void doBypass()
         
         // do the processing
         //ledStepOnZeroCrossing(y);
-        ledsConditionalCycle(onZeroCrossing(y));
+        //(LEDS_FW_CYCLE, onZeroCrossing(y));
         
         // write the outputs
         outA = x;

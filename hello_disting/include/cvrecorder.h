@@ -6,8 +6,7 @@
 
 #define __CVRECORDER_Z_TRESH__ (256)
 
-#define __CVRECORDER_BUFFER_LENGTH__ (SAMPLE_RATE / 200)
-
+#define __CVRECORDER_BUFFER_LENGTH__ (4096 + 1)
 #define cvWriteIndicator() (pot > __CVRECORDER_Z_TRESH__)
 
 typedef struct {
@@ -15,12 +14,20 @@ typedef struct {
     fix32 y;
 } frame_t;
 
-static frame_t  __cvBuffer[__CVRECORDER_BUFFER_LENGTH__];
-static int      __pHead  = 0;
-static int      __pStart = 0;
-static int      __pEnd   = __CVRECORDER_BUFFER_LENGTH__;
+static frame_t __cvBuffer[__CVRECORDER_BUFFER_LENGTH__];
+static int __pHead = 0;
+static int __pStart = 0;
+static int __pEnd = __CVRECORDER_BUFFER_LENGTH__;
 
-void inline cvMoveHead() {
+static inline char
+cvStepLeds(register const fix16 subSampleTicks) {
+    register fix32 timeDiv = (__pEnd - __pStart - 1) / subSampleTicks;
+    register fix32 result = (__pHead - __pStart + 1) % timeDiv;
+    return result == 0;
+}
+
+static inline void
+cvMoveHead() {
     if (__pHead < (__pEnd - 1)) {
         ++__pHead;
     } else {
@@ -28,14 +35,17 @@ void inline cvMoveHead() {
     }
 }
 
-void inline 
-cvWriteBuffer(const frame_t* inFrame) {
-    
-    *(__cvBuffer + __pHead) = *inFrame;
-    
+static inline void
+cvResetHead() {
+    __pHead = __pStart;
 }
 
-void inline 
+static inline void
+cvWriteBuffer(const frame_t* inFrame) {
+    *(__cvBuffer + __pHead) = *inFrame;
+}
+
+static inline void
 cvReadBuffer(frame_t* outFrame, const fix32 weight) {
 
     frame_t currFrame;
@@ -53,45 +63,24 @@ cvReadBuffer(frame_t* outFrame, const fix32 weight) {
     outFrame->y = linterp(weight, currFrame.y, nextFrame.y);
 }
 
-            /**
-            *  4   0
-            *  5   1
-            *  6   2
-            *  7   3
-            **/
-
-#define LEDS_ALL (0x40516273)
-
-#define LEDS_FW_CYCLE (0x45673210)
-
-#define LEDS_ALL_ON (0b11111111)
-
-#define LEDS_ALL_OFF (0b00000000)
-
-void 
+void
 doCvRecorder(const fix16 subSampleTicks) {
     // setup
     DECLARATIONS();
-    
-    static fix16 subSampleCount = 0;
 
-    ledsLock('P');
-    
+    fix16 subSampleCount = 0;
+
+    cvResetHead();
+    ledsResetCycle();
+
     for (;;) {
         // wait for new audio frame
         IDLE();
-        
-        if (cvWriteIndicator() && ledsLocked(LEDS_FW_CYCLE)) {
-            //setLeds(LEDS_ALL, LEDS_ALL_ON);
-            //ledsLock(LEDS_ALL);
-        } else {
 
-            
-        }
+        register char doStep = cvStepLeds(8);
 
-        ledsCycle(LEDS_FW_CYCLE, __CVRECORDER_BUFFER_LENGTH__ * 4);
-        ledsLock(LEDS_FW_CYCLE);
-        
+        ledsConditionalCycle(LEDS_FW_CYCLE, doStep, subSampleTicks);
+
         if (++subSampleCount >= subSampleTicks) {
             subSampleCount = 0;
 
@@ -101,20 +90,19 @@ doCvRecorder(const fix16 subSampleTicks) {
 
             if (cvWriteIndicator()) {
                 cvWriteBuffer(&inFrame);
-                      
             }
-            
+
             cvMoveHead();
 
-        } else {
-            frame_t outFrame;
-            fix32 weight = divfix32(subSampleCount, subSampleTicks);
-            cvReadBuffer(&outFrame, weight);
-            
-            outA = outFrame.x;
-            outB = outFrame.y;
-                        
         }
+
+        fix32 weight = divfix32(subSampleCount, subSampleTicks);
+
+        frame_t outFrame;
+        cvReadBuffer(&outFrame, weight);
+
+        outA = outFrame.x;
+        outB = outFrame.y;
 
         // loop end processing
         // (including reading the ADC channels)
